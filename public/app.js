@@ -1,3 +1,6 @@
+// force utf-8 safe rendering
+document.charset = "UTF-8";
+
 const R2_PUBLIC_BASE = "https://pub-2f7de274ccb949a995e329ce40005b2c.r2.dev";
 
 const state = {
