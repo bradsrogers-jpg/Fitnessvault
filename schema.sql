@@ -1,0 +1,19 @@
+CREATE TABLE checkins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT
+);
+
+CREATE TABLE media (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  url TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE foods (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  calories REAL,
+  protein REAL,
+  carbs REAL,
+  fat REAL
+);

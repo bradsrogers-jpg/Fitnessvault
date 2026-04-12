@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FitVault</title>
+</head>
+<body>
+  <h1>FitVault</h1>
+
+  <button onclick="checkin()">Check In 💗</button>
+  <p id="affirmation"></p>
+
+  <hr/>
+
+  <h3>Upload Media</h3>
+  <input type="file" id="fileInput" />
+  <button onclick="upload()">Upload</button>
+
+  <div id="preview"></div>
+
+  <script>
+    const affirmations = [
+      "You showed up. That’s the hardest part.",
+      "Consistency compounds.",
+      "Small wins stack."
+    ];
+
+    async function checkin() {
+      document.getElementById("affirmation").innerText =
+        affirmations[Math.floor(Math.random() * affirmations.length)];
+
+      await fetch("/api/checkin", { method: "POST" });
+    }
+
+    async function upload() {
+      const file = document.getElementById("fileInput").files[0];
+
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: form
+      });
+
+      const data = await res.json();
+
+      const url = `https://pub-2f7de274ccb949a995e329ce40005b2c.r2.dev/${data.key}`;
+
+      document.getElementById("preview").innerHTML =
+        `<img src="${url}" width="200"/>`;
+    }
+  </script>
+</body>
+</html>
