@@ -1,58 +1,16 @@
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
+name = "fitvault"
+main = "worker/index.js"
+compatibility_date = "2026-04-12"
 
-    if (url.pathname === "/api/checkin") {
-      return await checkin(env);
-    }
+[assets]
+directory = "./public"
+binding = "ASSETS"
 
-    if (url.pathname === "/api/upload") {
-      return await upload(request, env);
-    }
+[[d1_databases]]
+binding = "DB"
+database_name = "fitvault"
+database_id = "60e9ddab-a7ef-4847-9b3f-2d3180b764a3"
 
-    if (url.pathname === "/api/scan-label") {
-      return await scanLabel(request);
-    }
-
-    return new Response("Not found", { status: 404 });
-  }
-};
-
-async function checkin(env) {
-  await env.DB.prepare(
-    "INSERT INTO checkins (date) VALUES (?)"
-  ).bind(new Date().toISOString()).run();
-
-  return Response.json({ success: true });
-}
-
-async function upload(request, env) {
-  const form = await request.formData();
-  const file = form.get("file");
-
-  const key = `uploads/${Date.now()}-${file.name}`;
-
-  await env.MEDIA.put(key, file.stream(), {
-    httpMetadata: { contentType: file.type }
-  });
-
-  return Response.json({ key });
-}
-
-async function scanLabel(request) {
-  const body = await request.json();
-
-  const res = await fetch("https://api.ocr.space/parse/image", {
-    method: "POST",
-    headers: {
-      "apikey": "helloworld"
-    },
-    body: new URLSearchParams({
-      url: body.image
-    })
-  });
-
-  const data = await res.json();
-
-  return Response.json(data);
-}
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "fitvaultb"
