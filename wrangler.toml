@@ -1,23 +1,19 @@
-name = "fitnessvault"
-main = "worker/index.js"
-compatibility_date = "2026-04-13"
-
-# 🔑 REQUIRED for modern workers (this is what that warning is about)
-compatibility_flags = ["nodejs_compat"]
+name="fitvault"
+main="worker/index.js"
+compatibility_date="2026-04-12"
 
 [assets]
-directory = "./public"
-binding = "ASSETS"
+directory="./public"
+binding="ASSETS"
 
 [[d1_databases]]
-binding = "DB"
-database_name = "fitvault"
-database_id = "60e9ddab-a7ef-4847-9b3f-2d3180b764a3"
+binding="DB"
+database_name="fitvault"
+database_id="60e9ddab-a7ef-4847-9b3f-2d3180b764a3"
 
 [[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "fitvaultb"
+binding="MEDIA"
+bucket_name="fitvaultb"
 
 [vars]
-# optional defaults (safe to leave empty)
-ENV = "production"
+OPENAI_API_KEY="PUT_KEY"
