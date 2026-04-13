@@ -14,6 +14,3 @@ database_id="60e9ddab-a7ef-4847-9b3f-2d3180b764a3"
 [[r2_buckets]]
 binding="MEDIA"
 bucket_name="fitvaultb"
-
-[vars]
-OPENAI_API_KEY="PUT_KEY"
