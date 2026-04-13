@@ -6,3 +6,12 @@ compatibility_date="2026-04-12"
 [assets]
 directory="./public"
 binding="ASSETS"
+
+[[d1_databases]]
+binding="DB"
+database_name="fitvault"
+database_id="REPLACE_ME"
+
+[[r2_buckets]]
+binding="MEDIA"
+bucket_name="fitvaultb"

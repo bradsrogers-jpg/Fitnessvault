@@ -1,9 +1,7 @@
 
-body {margin:0;font-family:sans-serif;}
-.theme-clean {background:#fff;color:#111;}
-.theme-feminine {background:#1a0f1a;color:#fff;}
-.theme-performance {background:#0b1414;color:#d4ffe6;}
-.container {padding:16px;}
-.nav {position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#111;color:#fff;padding:10px;}
-button {padding:12px;border-radius:10px;border:none;}
-.card {padding:16px;margin-bottom:12px;border-radius:12px;background:#222;color:#fff;}
+body{margin:0;font-family:sans-serif;background:#0f1115;color:#fff}
+.container{padding:16px}
+.nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#111;padding:10px}
+button{padding:12px;border-radius:10px;border:none}
+.card{background:#1a1d25;padding:16px;margin-bottom:12px;border-radius:12px}
+.fab{position:fixed;bottom:80px;right:20px;background:#ff4d94;color:#fff;padding:16px;border-radius:50%}
