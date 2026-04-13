@@ -1,71 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FitVault</title>
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="/app.css" />
 </head>
-<body>
-
-<div class="app">
-
-  <!-- HOME -->
-  <div id="home" class="screen active">
-    <div class="card hero">
-      <h2>Today</h2>
-      <button class="primary" onclick="checkin()">Check In</button>
-      <p id="affirmation"></p>
-    </div>
-
-    <div class="grid">
-      <div class="card stat">
-        <h3>Calories</h3>
-        <p id="calories">0</p>
-      </div>
-      <div class="card stat">
-        <h3>Protein</h3>
-        <p id="protein">0g</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- SESSION -->
-  <div id="session" class="screen">
-    <h2>Workout</h2>
-    <input placeholder="Exercise" id="exercise"/>
-    <input placeholder="Weight" id="weight"/>
-    <input placeholder="Reps" id="reps"/>
-    <button onclick="addSet()">Add Set</button>
-    <div id="sets"></div>
-  </div>
-
-  <!-- NUTRITION -->
-  <div id="nutrition" class="screen">
-    <h2>Nutrition</h2>
-    <input placeholder="Food name" id="foodName"/>
-    <input placeholder="Calories" id="foodCalories"/>
-    <button onclick="addFood()">Add Food</button>
-    <div id="foods"></div>
-  </div>
-
-  <!-- LIBRARY -->
-  <div id="library" class="screen">
-    <h2>Library</h2>
-    <input type="file" id="fileInput"/>
-    <button onclick="upload()">Upload</button>
-    <div id="media"></div>
-  </div>
-
-  <!-- NAV -->
-  <div class="nav">
-    <button onclick="show('home')">🏠</button>
-    <button onclick="show('session')">🏋️</button>
-    <button onclick="show('nutrition')">🍽️</button>
-    <button onclick="show('library')">📸</button>
-  </div>
-
-</div>
-
-<script src="app.js"></script>
+<body class="theme-neutral">
+  <div id="app"></div>
+  <script src="/app.js"></script>
 </body>
 </html>
