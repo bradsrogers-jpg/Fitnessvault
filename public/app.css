@@ -1,7 +1,73 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f0f14;
+  color: white;
+}
 
-body{margin:0;font-family:sans-serif;background:#0f1115;color:#fff}
-.nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#111;padding:10px}
-.card{background:#1a1d25;padding:16px;margin:12px;border-radius:12px}
-button{padding:12px;border:none;border-radius:10px}
-input{padding:10px;width:100%;margin:6px 0}
-.fab{position:fixed;bottom:80px;right:20px;background:#ff4d94;padding:16px;border-radius:50%}
+.app {
+  padding-bottom: 70px;
+}
+
+.screen {
+  display: none;
+  padding: 16px;
+}
+
+.screen.active {
+  display: block;
+}
+
+.card {
+  background: #1a1a22;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.hero {
+  text-align: center;
+}
+
+.primary {
+  background: #ff4d8d;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  color: white;
+}
+
+.grid {
+  display: flex;
+  gap: 10px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #1a1a22;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+}
