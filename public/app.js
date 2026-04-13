@@ -124,7 +124,6 @@ async function renderHome() {
       <section class="surface">
         <div class="kicker">today</div>
         <div class="hero-title">Check in. Train. Fuel. Track. Keep the receipts.</div>
-        <div class="hero-sub">This version actually works. It tracks gym days, workouts, foods, progress, media, workout ideas, themes, and optional cycle logs in one place.</div>
         <div class="row">
           <button class="primary" onclick="checkIn()">Check In</button>
           <button class="secondary" onclick="go('session')">Open Session</button>
