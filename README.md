@@ -1,12 +1,29 @@
-# FitVault UI Full
+# FitVault fixed full app
 
-A fuller mobile-first UI rebuild for FitVault.
+This is the full current no-API-key working app version.
 
-## Includes
-- Home dashboard with check-in hero, streak tile area, quick actions
-- Session logging UI
-- Nutrition dashboard with saved foods and daily intake
-- Progress tracking with measurement cards
-- Media library with upload and previews
-- Settings with theme switching
-- Cloudflare Worker + static assets
+## Included and working
+- check-ins
+- dashboard counts + today calories/protein + streak
+- workouts
+- workout sets
+- saved food vault
+- nutrition logs
+- measurements
+- media uploads to R2
+- workout ideas library
+- theme switcher
+- optional cycle tracking setting + logs
+
+## Not included yet
+- OCR / AI parsing from images
+- meal photo detection
+- workout photo parsing
+
+Those two need an API later. Everything else above works now.
+
+## Deploy
+Use Cloudflare Workers, not Pages.
+
+## After upload
+Run the schema in D1.
