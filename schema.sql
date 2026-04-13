@@ -1,19 +1,87 @@
-CREATE TABLE checkins (
+CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date TEXT
-);
-
-CREATE TABLE media (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  url TEXT,
+  email TEXT UNIQUE,
+  theme TEXT DEFAULT 'neutral',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE foods (
+CREATE TABLE IF NOT EXISTS checkins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT,
-  calories REAL,
-  protein REAL,
-  carbs REAL,
-  fat REAL
+  user_id INTEGER DEFAULT 1,
+  checkin_date TEXT NOT NULL,
+  checkin_time TEXT NOT NULL,
+  mood TEXT,
+  energy INTEGER,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workouts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER DEFAULT 1,
+  checkin_id INTEGER,
+  title TEXT,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workout_sets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  workout_id INTEGER NOT NULL,
+  exercise TEXT NOT NULL,
+  weight REAL,
+  reps INTEGER,
+  set_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS foods (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER DEFAULT 1,
+  name TEXT NOT NULL,
+  brand TEXT,
+  serving_size TEXT,
+  calories REAL DEFAULT 0,
+  protein REAL DEFAULT 0,
+  carbs REAL DEFAULT 0,
+  fat REAL DEFAULT 0,
+  fiber REAL DEFAULT 0,
+  sugar REAL DEFAULT 0,
+  sodium REAL DEFAULT 0,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS nutrition_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER DEFAULT 1,
+  log_date TEXT NOT NULL,
+  calories REAL DEFAULT 0,
+  protein REAL DEFAULT 0,
+  carbs REAL DEFAULT 0,
+  fat REAL DEFAULT 0,
+  water REAL DEFAULT 0,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS measurements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER DEFAULT 1,
+  log_date TEXT NOT NULL,
+  weight REAL,
+  waist REAL,
+  chest REAL,
+  arms REAL,
+  thighs REAL,
+  body_fat REAL,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS media (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER DEFAULT 1,
+  media_type TEXT NOT NULL,
+  file_key TEXT NOT NULL,
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
