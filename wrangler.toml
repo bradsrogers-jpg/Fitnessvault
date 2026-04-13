@@ -10,7 +10,7 @@ binding="ASSETS"
 [[d1_databases]]
 binding="DB"
 database_name="fitvault"
-database_id="REPLACE_ME"
+database_id="60e9ddab-a7ef-4847-9b3f-2d3180b764a3"
 
 [[r2_buckets]]
 binding="MEDIA"
