@@ -37,3 +37,15 @@ Use Cloudflare Workers (not Pages).
 ## Troubleshooting
 - If commits are not visible in a hosted UI, verify a git remote is configured and pushed.
 
+
+## CI / Cloudflare dashboard deploy fix
+If your deploy log shows `/bin/sh: 1: wrangler: not found`, your build environment does not have global Wrangler installed.
+
+Use one of these deploy commands instead:
+- `npm install && npm run deploy:ci`
+- `npx wrangler versions upload`
+
+For local/manual deploy:
+- `npm install`
+- `npm run deploy`
+

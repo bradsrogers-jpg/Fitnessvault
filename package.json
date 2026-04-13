@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
+    "deploy:ci": "npx wrangler versions upload",
     "check": "node --check public/app.js && node --check worker/index.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.13.2"
   }
 }
