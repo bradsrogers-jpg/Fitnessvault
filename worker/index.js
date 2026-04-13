@@ -1,127 +1,225 @@
 export default {
  async fetch(req, env){
-  const url=new URL(req.url);
+  const url = new URL(req.url);
 
-  const user = await auth(req, env);
+  const user = { id: 1 }; // your current app is single-user default
 
-  // --- AUTH ---
-  if(url.pathname==="/api/register") return json(await register(req, env));
-  if(url.pathname==="/api/login") return json(await login(req, env));
-
-  // --- DASHBOARD ---
+  // ---------- DASHBOARD ----------
   if(url.pathname==="/api/dashboard"){
-   const c=await env.DB.prepare("SELECT COUNT(*) c FROM checkins WHERE user_id=?").bind(user.id).first();
-   const cal=await env.DB.prepare("SELECT SUM(calories) c FROM foods WHERE user_id=?").bind(user.id).first();
-   return json({checkins:c.c||0,calories:cal.c||0});
+    const checkins = await env.DB.prepare("SELECT COUNT(*) c FROM checkins WHERE user_id=?").bind(user.id).first();
+    const calories = await env.DB.prepare("SELECT SUM(calories) c FROM nutrition_logs WHERE user_id=? AND log_date=date('now')").bind(user.id).first();
+
+    return json({
+      checkins: checkins.c || 0,
+      calories: calories.c || 0
+    });
   }
 
-  // --- CHECKIN ---
+  // ---------- CHECKIN ----------
   if(url.pathname==="/api/checkin"){
-   await env.DB.prepare("INSERT INTO checkins (user_id,date) VALUES (?,?)")
-   .bind(user.id,new Date().toISOString()).run();
-   return json({ok:true});
+    await env.DB.prepare(`
+      INSERT INTO checkins (user_id, checkin_date, checkin_time)
+      VALUES (?, date('now'), time('now'))
+    `).bind(user.id).run();
+
+    return json({ ok:true });
   }
 
-  // --- WORKOUT ---
-  if(url.pathname==="/api/workouts"){
-   const b=await req.json();
-   await env.DB.prepare("INSERT INTO workouts (user_id,title) VALUES (?,?)")
-   .bind(user.id,b.title).run();
-   return json({ok:true});
+  // ---------- WORKOUT ----------
+  if(url.pathname==="/api/workouts" && req.method==="POST"){
+    const b = await req.json();
+
+    await env.DB.prepare(`
+      INSERT INTO workouts (user_id, title)
+      VALUES (?, ?)
+    `).bind(user.id, b.title).run();
+
+    return json({ ok:true });
   }
 
-  // --- FOOD ---
-  if(url.pathname==="/api/foods"){
-   const b=await req.json();
-   await env.DB.prepare("INSERT INTO foods (user_id,name,calories) VALUES (?,?,?)")
-   .bind(user.id,b.name,b.calories).run();
-   return json({ok:true});
+  // ---------- FOOD ----------
+  if(url.pathname==="/api/foods" && req.method==="POST"){
+    const b = await req.json();
+
+    await env.DB.prepare(`
+      INSERT INTO foods (user_id, name, calories)
+      VALUES (?, ?, ?)
+    `).bind(user.id, b.name, b.calories).run();
+
+    return json({ ok:true });
   }
 
-  // --- MEDIA ---
-  if(url.pathname==="/api/media"){
-   const form=await req.formData();
-   const f=form.get("file");
-   const key="m-"+Date.now();
-   await env.MEDIA.put(key,f.stream());
-   await env.DB.prepare("INSERT INTO media (user_id,file_key) VALUES (?,?)")
-   .bind(user.id,key).run();
-   return json({ok:true});
+  // ---------- MEDIA ----------
+  if(url.pathname==="/api/media" && req.method==="POST"){
+    const form = await req.formData();
+    const file = form.get("file");
+
+    const key = "media-" + Date.now();
+
+    await env.MEDIA.put(key, file.stream());
+
+    await env.DB.prepare(`
+      INSERT INTO media (user_id, media_type, file_key)
+      VALUES (?, 'upload', ?)
+    `).bind(user.id, key).run();
+
+    return json({ ok:true });
   }
 
-  // --- AI ---
-  if(url.pathname==="/api/ai/meal") return json(await ai(req,env,"Estimate calories JSON"));
-  if(url.pathname==="/api/ai/label") return json(await ai(req,env,"Extract nutrition JSON"));
-  if(url.pathname==="/api/ai/workout") return json(await ai(req,env,"List exercises JSON"));
+  // =========================================================
+  // ====================== AI ROUTES =========================
+  // =========================================================
+
+  if(url.pathname==="/api/ai/meal"){
+    return json(await aiMeal(req, env, user));
+  }
+
+  if(url.pathname==="/api/ai/label"){
+    return json(await aiLabel(req, env, user));
+  }
+
+  if(url.pathname==="/api/ai/workout"){
+    return json(await aiWorkout(req, env, user));
+  }
 
   return env.ASSETS.fetch(req);
  }
 };
 
-function json(d){return new Response(JSON.stringify(d),{headers:{"content-type":"application/json"}})}
-
-async function auth(req, env){
- const cookie=req.headers.get("cookie")||"";
- const sid=cookie.split("sid=")[1];
- if(!sid) return {};
-
- const s=await env.DB.prepare("SELECT * FROM sessions WHERE id=?").bind(sid).first();
- if(!s) return {};
-
- return {id:s.user_id};
+function json(d){
+  return new Response(JSON.stringify(d),{
+    headers:{ "content-type":"application/json" }
+  });
 }
 
-async function register(req, env){
- const b=await req.json();
- await env.DB.prepare("INSERT INTO users (email,password) VALUES (?,?)")
- .bind(b.email,b.password).run();
- return {ok:true};
+// ===================== AI CORE =====================
+
+async function base64(file){
+  const buf = await file.arrayBuffer();
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
 
-async function login(req, env){
- const b=await req.json();
- const u=await env.DB.prepare("SELECT * FROM users WHERE email=? AND password=?")
- .bind(b.email,b.password).first();
+async function callAI(env, prompt, image){
+  const res = await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${env.OPENAI_API_KEY}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      model:"gpt-4.1-mini",
+      input:[{
+        role:"user",
+        content:[
+          {type:"input_text",text:prompt},
+          {type:"input_image",image_base64:image}
+        ]
+      }]
+    })
+  });
 
- if(!u) return {error:true};
+  const data = await res.json();
 
- const sid=crypto.randomUUID();
-
- await env.DB.prepare("INSERT INTO sessions (id,user_id,created_at) VALUES (?,?,?)")
- .bind(sid,u.id,new Date().toISOString()).run();
-
- return new Response(JSON.stringify({ok:true}),{
-  headers:{
-   "Set-Cookie":`sid=${sid}; Path=/; HttpOnly`,
-   "content-type":"application/json"
+  try{
+    return JSON.parse(data.output[0].content[0].text);
+  }catch{
+    return { error:true };
   }
- });
 }
 
-async function ai(req,env,prompt){
- if(!env.OPENAI_API_KEY)return{fallback:true};
+// ===================== MEAL =====================
 
- const form=await req.formData();
- const f=form.get("file");
+async function aiMeal(req, env, user){
+  if(!env.OPENAI_API_KEY) return { fallback:true };
 
- const buf=await f.arrayBuffer();
- const base64=btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const file = (await req.formData()).get("file");
+  const img = await base64(file);
 
- const r=await fetch("https://api.openai.com/v1/responses",{
-  method:"POST",
-  headers:{
-   "Authorization":`Bearer ${env.OPENAI_API_KEY}`,
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   model:"gpt-4.1-mini",
-   input:[{role:"user",content:[
-    {type:"input_text",text:prompt},
-    {type:"input_image",image_base64:base64}
-   ]}]
-  })
- });
+  const parsed = await callAI(env,
+    "Estimate calories, protein, carbs, fat JSON",
+    img
+  );
 
- const d=await r.json();
- try{return JSON.parse(d.output[0].content[0].text)}catch{return{error:true}};
+  if(parsed.error) return parsed;
+
+  await env.DB.prepare(`
+    INSERT INTO nutrition_logs
+    (user_id, log_date, calories, protein, carbs, fat)
+    VALUES (?, date('now'), ?, ?, ?, ?)
+  `).bind(
+    user.id,
+    parsed.calories || 0,
+    parsed.protein || 0,
+    parsed.carbs || 0,
+    parsed.fat || 0
+  ).run();
+
+  return { success:true, data:parsed };
+}
+
+// ===================== LABEL =====================
+
+async function aiLabel(req, env, user){
+  if(!env.OPENAI_API_KEY) return { fallback:true };
+
+  const file = (await req.formData()).get("file");
+  const img = await base64(file);
+
+  const parsed = await callAI(env,
+    "Extract nutrition label JSON with name, calories, protein, carbs, fat",
+    img
+  );
+
+  if(parsed.error) return parsed;
+
+  await env.DB.prepare(`
+    INSERT INTO foods (user_id, name, calories, protein, carbs, fat)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(
+    user.id,
+    parsed.name || "Scanned Food",
+    parsed.calories || 0,
+    parsed.protein || 0,
+    parsed.carbs || 0,
+    parsed.fat || 0
+  ).run();
+
+  return { success:true, data:parsed };
+}
+
+// ===================== WORKOUT =====================
+
+async function aiWorkout(req, env, user){
+  if(!env.OPENAI_API_KEY) return { fallback:true };
+
+  const file = (await req.formData()).get("file");
+  const img = await base64(file);
+
+  const parsed = await callAI(env,
+    "Return JSON { exercises:[{name, weight, reps}] }",
+    img
+  );
+
+  if(parsed.error) return parsed;
+
+  const result = await env.DB.prepare(`
+    INSERT INTO workouts (user_id, title)
+    VALUES (?, ?)
+  `).bind(user.id, "AI Workout").run();
+
+  const wid = result.meta.last_row_id;
+
+  for(const ex of parsed.exercises || []){
+    await env.DB.prepare(`
+      INSERT INTO workout_sets (workout_id, exercise, weight, reps)
+      VALUES (?, ?, ?, ?)
+    `).bind(
+      wid,
+      ex.name,
+      ex.weight || 0,
+      ex.reps || 0
+    ).run();
+  }
+
+  return { success:true, data:parsed };
 }
