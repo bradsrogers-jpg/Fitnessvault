@@ -1,9 +1,22 @@
-{
-  "name": "fitvault-fixed",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
-  }
-}
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/package.json b/package.json
+index 7aade3957ced7213274972d4e8b8d0d245a10b42..85c876bc33385a980b7cd8db72b6468d516184c2 100644
+--- a/package.json
++++ b/package.json
+@@ -1,9 +1,10 @@
+ {
+   "name": "fitvault-fixed",
+   "version": "1.0.0",
+   "private": true,
+   "scripts": {
+     "dev": "wrangler dev",
+-    "deploy": "wrangler deploy"
++    "deploy": "wrangler deploy",
++    "check": "node --check public/app.js && node --check worker/index.js"
+   }
+-}
+\ No newline at end of file
++}
+ 
+EOF
+)
