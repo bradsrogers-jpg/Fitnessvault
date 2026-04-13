@@ -7,14 +7,22 @@
 </head>
 <body>
 
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+
 <div class="app">
+  <header class="topbar">
+    <h1>FitVault</h1>
+    <p>Train smart. Track everything. Analyze instantly.</p>
+  </header>
 
   <!-- HOME -->
   <div id="home" class="screen active">
     <div class="card hero">
       <h2>Today</h2>
-      <button class="primary" onclick="checkin()">Check In</button>
-      <p id="affirmation"></p>
+      <button class="primary" onclick="checkin()">✅ Check In</button>
+      <p id="affirmation" class="muted"></p>
+      <p id="status" class="status"></p>
     </div>
 
     <div class="grid">
@@ -31,43 +39,52 @@
 
   <!-- SESSION -->
   <div id="session" class="screen">
-    <h2>Workout</h2>
-    <input placeholder="Exercise" id="exercise"/>
-    <input placeholder="Weight" id="weight"/>
-    <input placeholder="Reps" id="reps"/>
-    <button onclick="addSet()">Add Set</button>
-    <div id="sets"></div>
+    <div class="card">
+      <h2>Workout Session</h2>
+      <input placeholder="Exercise" id="exercise"/>
+      <input placeholder="Weight" id="weight"/>
+      <input placeholder="Reps" id="reps"/>
+      <button class="primary" onclick="addSet()">Add Set</button>
+      <div id="sets" class="list"></div>
+    </div>
   </div>
 
   <!-- NUTRITION -->
   <div id="nutrition" class="screen">
-    <h2>Nutrition</h2>
-    <input placeholder="Food name" id="foodName"/>
-    <input placeholder="Calories" id="foodCalories"/>
-    <button onclick="addFood()">Add Food</button>
-    <div id="foods"></div>
+    <div class="card">
+      <h2>Nutrition</h2>
+      <input placeholder="Food name" id="foodName"/>
+      <input placeholder="Calories" id="foodCalories"/>
+      <button class="primary" onclick="addFood()">Add Food</button>
+      <div id="foods" class="list"></div>
+    </div>
   </div>
 
   <!-- LIBRARY -->
   <div id="library" class="screen">
-    <h2>Library + AI</h2>
-    <input type="file" id="fileInput" accept="image/*"/>
-    <button onclick="upload()">Upload</button>
-    <button onclick="analyzeImage('meal')">AI: Meal</button>
-    <button onclick="analyzeImage('label')">AI: Label</button>
-    <button onclick="analyzeImage('workout')">AI: Workout</button>
-    <pre id="aiOutput"></pre>
-    <div id="media"></div>
+    <div class="card">
+      <h2>Media + AI Lab</h2>
+      <input type="file" id="fileInput" accept="image/*"/>
+
+      <div class="actions">
+        <button class="primary" onclick="upload()">Upload to Vault</button>
+        <button onclick="analyzeImage('meal')">AI: Meal</button>
+        <button onclick="analyzeImage('label')">AI: Label</button>
+        <button onclick="analyzeImage('workout')">AI: Workout</button>
+      </div>
+
+      <pre id="aiOutput" class="ai-output">AI results will appear here.</pre>
+      <div id="media" class="media-grid"></div>
+    </div>
   </div>
 
   <!-- NAV -->
   <div class="nav">
-    <button onclick="show('home')">🏠</button>
-    <button onclick="show('session')">🏋️</button>
-    <button onclick="show('nutrition')">🍽️</button>
-    <button onclick="show('library')">📸</button>
+    <button onclick="show('home')">🏠<span>Home</span></button>
+    <button onclick="show('session')">🏋️<span>Session</span></button>
+    <button onclick="show('nutrition')">🍽️<span>Nutrition</span></button>
+    <button onclick="show('library')">📸<span>AI Lab</span></button>
   </div>
-
 </div>
 
 <script src="app.js"></script>

@@ -1,17 +1,76 @@
+:root {
+  --bg: #090a13;
+  --bg-card: rgba(25, 29, 48, 0.74);
+  --text: #eef2ff;
+  --muted: #a4add3;
+  --accent: #8f6bff;
+  --accent-2: #25d0ff;
+  --success: #38e89d;
+  --border: rgba(255, 255, 255, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial;
-  background: #0f0f14;
-  color: white;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(circle at 20% 10%, #121a3a 0, var(--bg) 50%), var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.bg-glow {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(85px);
+  z-index: 0;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.glow-1 {
+  width: 240px;
+  height: 240px;
+  background: #7d5dff;
+  top: -30px;
+  left: -40px;
+}
+
+.glow-2 {
+  width: 280px;
+  height: 280px;
+  background: #2bc8ff;
+  bottom: 40px;
+  right: -80px;
 }
 
 .app {
-  padding-bottom: 70px;
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 14px 96px;
+}
+
+.topbar {
+  margin: 8px 0 14px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.4px;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  color: var(--muted);
 }
 
 .screen {
   display: none;
-  padding: 16px;
 }
 
 .screen.active {
@@ -19,55 +78,151 @@ body {
 }
 
 .card {
-  background: #1a1a22;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
   padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
 .hero {
   text-align: center;
 }
 
-.primary {
-  background: #ff4d8d;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  color: white;
-}
-
 .grid {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.stat {
-  flex: 1;
-  text-align: center;
+.stat h3 {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.stat p {
+  font-size: 2rem;
+  margin: 6px 0 4px;
+  font-weight: 700;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.status {
+  min-height: 20px;
+  color: var(--success);
+  font-size: 0.92rem;
+}
+
+input,
+button,
+pre {
+  border-radius: 12px;
 }
 
 input {
   width: 100%;
-  margin: 6px 0;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
+  margin: 7px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: rgba(13, 16, 30, 0.82);
+  color: var(--text);
+  outline: none;
+}
+
+input:focus {
+  border-color: rgba(143, 107, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(143, 107, 255, 0.2);
 }
 
 button {
   margin-top: 8px;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 600;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ai-output {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  background: rgba(8, 10, 20, 0.84);
+  color: #b7f9ff;
+  min-height: 110px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.list div {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(98px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.media-grid img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
 }
 
 .nav {
   position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #1a1a22;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - 16px));
+  background: rgba(18, 22, 36, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.nav button {
+  margin: 0;
   display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 1rem;
+}
+
+.nav span {
+  font-size: 0.72rem;
+  color: var(--muted);
 }

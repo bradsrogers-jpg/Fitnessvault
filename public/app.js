@@ -9,6 +9,11 @@ function show(id) {
   document.getElementById(id).classList.add("active");
 }
 
+function setStatus(message = "") {
+  const status = document.getElementById("status");
+  if (status) status.textContent = message;
+}
+
 async function apiFetch(path, options = {}) {
   const isFormData = options.body instanceof FormData;
 
@@ -35,6 +40,7 @@ async function loadDashboard() {
     document.getElementById("protein").innerText = `${data.protein ?? 0}g`;
   } catch (err) {
     console.error("Failed to load dashboard", err);
+    setStatus("Could not load dashboard");
   }
 }
 
@@ -44,9 +50,11 @@ async function checkin() {
 
   try {
     await apiFetch("/api/checkin", { method: "POST", body: JSON.stringify({}) });
+    setStatus("Check-in saved ✔");
     await loadDashboard();
   } catch (err) {
     console.error("Check-in failed", err);
+    setStatus("Check-in failed");
   }
 }
 
@@ -81,9 +89,11 @@ async function addFood() {
     document.getElementById("foodName").value = "";
     document.getElementById("foodCalories").value = "";
 
+    setStatus("Food logged ✔");
     await loadDashboard();
   } catch (err) {
     console.error("Add food failed", err);
+    setStatus("Food log failed");
   }
 }
 
@@ -100,15 +110,21 @@ async function upload() {
       body: form
     });
 
-    if (!data.url) return;
+    if (!data.url) {
+      setStatus("Uploaded (no public URL configured)");
+      return;
+    }
 
     const img = document.createElement("img");
     img.src = data.url;
     img.width = 120;
+    img.alt = "Uploaded media";
 
     document.getElementById("media").appendChild(img);
+    setStatus("Image uploaded to vault ✔");
   } catch (err) {
     console.error("Upload failed", err);
+    setStatus("Upload failed");
   }
 }
 
@@ -133,8 +149,10 @@ async function analyzeImage(type) {
     });
 
     out.textContent = JSON.stringify(data.result ?? data, null, 2);
+    setStatus(`AI ${type} analysis complete ✔`);
   } catch (err) {
     out.textContent = `AI request failed: ${err.message}`;
+    setStatus("AI analysis failed");
   }
 }
 

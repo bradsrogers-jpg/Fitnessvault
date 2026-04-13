@@ -3,6 +3,7 @@
 This version is cleaned up so the current UI works end-to-end, and AI image parsing is enabled when your OpenAI key is configured.
 
 ## Included and working
+- refreshed glassmorphism-style mobile UI with AI lab controls
 - check-ins
 - dashboard totals (calories + protein placeholder)
 - workouts endpoint
