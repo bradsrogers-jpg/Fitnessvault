@@ -1,97 +1,58 @@
+const affirmations = [
+  "You showed up. That’s what matters.",
+  "Discipline > motivation.",
+  "Stack small wins daily."
+];
 
-const app=document.getElementById("app");
-let page="home";
-
-async function api(p,o={}){const r=await fetch(p,o);return r.json();}
-
-function nav(){return `<div class="nav">
-<button onclick="go('home')">Home</button>
-<button onclick="go('food')">Food</button>
-<button onclick="go('workout')">Workout</button>
-<button onclick="go('vault')">Vault</button>
-</div>`;}
-
-async function home(){
-const d=await api("/api/dashboard");
-return `<div class="card">
-<h3>Dashboard</h3>
-Checkins: ${d.checkins||0}<br>
-Foods: ${d.foods||0}<br>
-Media: ${d.media||0}
-</div>`;
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-function food(){
-return `<div class="card">
-<input id="fname" placeholder="Food">
-<input id="cal" placeholder="Calories">
-<button onclick="saveFood()">Save</button>
-<hr>
-<input type="file" id="meal">
-<button onclick="scanMeal()">Scan Meal (AI)</button>
-<div id="out"></div>
-</div>`;
+async function checkin() {
+  document.getElementById("affirmation").innerText =
+    affirmations[Math.floor(Math.random() * affirmations.length)];
+
+  await fetch("/api/checkin", { method: "POST" });
 }
 
-function workout(){
-return `<div class="card">
-<input id="wname" placeholder="Workout">
-<button onclick="saveWorkout()">Save</button>
-<hr>
-<input type="file" id="wimg">
-<button onclick="scanWorkout()">Scan Workout (AI)</button>
-<div id="wout"></div>
-</div>`;
+function addSet() {
+  const ex = document.getElementById("exercise").value;
+  const w = document.getElementById("weight").value;
+  const r = document.getElementById("reps").value;
+
+  const div = document.createElement("div");
+  div.innerText = `${ex} - ${w} x ${r}`;
+  document.getElementById("sets").appendChild(div);
 }
 
-function vault(){
-return `<div class="card">
-<input type="file" id="file">
-<button onclick="upload()">Upload</button>
-</div>`;
+function addFood() {
+  const name = document.getElementById("foodName").value;
+  const cal = document.getElementById("foodCalories").value;
+
+  const div = document.createElement("div");
+  div.innerText = `${name} - ${cal} cal`;
+  document.getElementById("foods").appendChild(div);
 }
 
-function render(){
-let c="";
-if(page=="home")c=home();
-if(page=="food")c=food();
-if(page=="workout")c=workout();
-if(page=="vault")c=vault();
-Promise.resolve(c).then(h=>{
-app.innerHTML=h+nav()+`<button class="fab" onclick="checkin()">+</button>`;
-});
-}
+async function upload() {
+  const file = document.getElementById("fileInput").files[0];
 
-function go(p){page=p;render();}
+  const form = new FormData();
+  form.append("file", file);
 
-async function checkin(){await api("/api/checkin",{method:"POST"});render();}
-async function saveFood(){
-await api("/api/foods",{method:"POST",body:JSON.stringify({
-name:fname.value,calories:cal.value
-})});render();
-}
-async function saveWorkout(){
-await api("/api/workouts",{method:"POST",body:JSON.stringify({title:wname.value})});
-render();
-}
-async function upload(){
-const f=file.files[0];
-const fd=new FormData();fd.append("file",f);
-await api("/api/media",{method:"POST",body:fd});
-render();
-}
+  const res = await fetch("/api/media/upload", {
+    method: "POST",
+    body: form
+  });
 
-async function scanMeal(){
-const f=meal.files[0];
-const fd=new FormData();fd.append("file",f);
-const r=await api("/api/ai/meal",{method:"POST",body:fd});
-out.innerText=JSON.stringify(r);
-}
-async function scanWorkout(){
-const f=wimg.files[0];
-const fd=new FormData();fd.append("file",f);
-const r=await api("/api/ai/workout",{method:"POST",body:fd});
-wout.innerText=JSON.stringify(r);
-}
+  const data = await res.json();
 
-render();
+  const url = `https://pub-2f7de274ccb949a995e329ce40005b2c.r2.dev/${data.key}`;
+
+  const img = document.createElement("img");
+  img.src = url;
+  img.width = 120;
+
+  document.getElementById("media").appendChild(img);
+}
