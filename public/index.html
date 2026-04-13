@@ -50,9 +50,13 @@
 
   <!-- LIBRARY -->
   <div id="library" class="screen">
-    <h2>Library</h2>
-    <input type="file" id="fileInput"/>
+    <h2>Library + AI</h2>
+    <input type="file" id="fileInput" accept="image/*"/>
     <button onclick="upload()">Upload</button>
+    <button onclick="analyzeImage('meal')">AI: Meal</button>
+    <button onclick="analyzeImage('label')">AI: Label</button>
+    <button onclick="analyzeImage('workout')">AI: Workout</button>
+    <pre id="aiOutput"></pre>
     <div id="media"></div>
   </div>
 
