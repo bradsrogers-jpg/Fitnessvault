@@ -1,3 +1,14 @@
+async function login(){
+ const email=document.getElementById("email").value;
+ const password=document.getElementById("pass").value;
+
+ await fetch("/api/login",{
+  method:"POST",
+  body:JSON.stringify({email,password})
+ });
+
+ location.reload();
+}
 const affirmations = [
   "You showed up. That’s what matters.",
   "Discipline > motivation.",
