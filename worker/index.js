@@ -1,4 +1,3 @@
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -25,12 +24,20 @@ export default {
       if (url.pathname === "/api/settings/theme" && request.method === "POST") return json(await saveTheme(request, env));
       if (url.pathname === "/api/settings/cycle-tracking" && request.method === "POST") return json(await saveCycleTracking(request, env));
 
+      // AI routes
+      if (url.pathname === "/api/ai/meal" && request.method === "POST") return json(await aiMeal(request, env));
+      if (url.pathname === "/api/ai/label" && request.method === "POST") return json(await aiLabel(request, env));
+      if (url.pathname === "/api/ai/workout" && request.method === "POST") return json(await aiWorkout(request, env));
+
       return env.ASSETS.fetch(request);
     } catch (error) {
-      return json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown server error"
-      }, 500);
+      return json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown server error"
+        },
+        500
+      );
     }
   }
 };
@@ -43,10 +50,23 @@ function json(data, status = 200) {
 }
 
 async function safeJson(request) {
-  try { return await request.json(); } catch { return {}; }
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
 }
-function num0(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
-function nullable(v) { if (v === "" || v == null) return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
+
+function num0(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function nullable(v) {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
 
 async function scalar(env, sql, bindings = []) {
   let stmt = env.DB.prepare(sql);
@@ -62,21 +82,35 @@ async function getDashboard(env) {
   const totalFoods = await scalar(env, "SELECT COUNT(*) AS c FROM foods");
   const totalMedia = await scalar(env, "SELECT COUNT(*) AS c FROM media");
   const totalMeasurements = await scalar(env, "SELECT COUNT(*) AS c FROM measurements");
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
   const todayCalories = await scalar(env, "SELECT COALESCE(SUM(calories),0) AS c FROM nutrition_logs WHERE log_date = ?", [today]);
   const todayProtein = await scalar(env, "SELECT COALESCE(SUM(protein),0) AS c FROM nutrition_logs WHERE log_date = ?", [today]);
   const todayWorkouts = await scalar(env, "SELECT COUNT(*) AS c FROM workouts WHERE substr(created_at,1,10) = ?", [today]);
   const streak = await calculateStreak(env);
   const settings = await getSettings(env);
-  return { success:true, totalCheckins, totalFoods, totalMedia, totalMeasurements, todayCalories, todayProtein, todayWorkouts, streak, cycleTrackingEnabled: settings.cycle_tracking_enabled || 0 };
+
+  return {
+    success: true,
+    totalCheckins,
+    totalFoods,
+    totalMedia,
+    totalMeasurements,
+    todayCalories,
+    todayProtein,
+    todayWorkouts,
+    streak,
+    cycleTrackingEnabled: settings.cycle_tracking_enabled || 0
+  };
 }
 
 async function calculateStreak(env) {
   const { results } = await env.DB.prepare("SELECT DISTINCT checkin_date FROM checkins ORDER BY checkin_date DESC").all();
   if (!results || !results.length) return 0;
+
   let streak = 0;
   let cursor = new Date();
-  cursor.setHours(0,0,0,0);
+  cursor.setHours(0, 0, 0, 0);
+
   for (const row of results) {
     const d = new Date(row.checkin_date + "T00:00:00");
     if (d.getTime() === cursor.getTime()) {
@@ -84,7 +118,7 @@ async function calculateStreak(env) {
       cursor.setDate(cursor.getDate() - 1);
     } else if (streak === 0) {
       const yesterday = new Date();
-      yesterday.setHours(0,0,0,0);
+      yesterday.setHours(0, 0, 0, 0);
       yesterday.setDate(yesterday.getDate() - 1);
       if (d.getTime() === yesterday.getTime()) {
         streak++;
@@ -97,15 +131,20 @@ async function calculateStreak(env) {
       break;
     }
   }
+
   return streak;
 }
 
 async function createCheckin(request, env) {
   const body = await safeJson(request);
-  const date = body.date || new Date().toISOString().slice(0,10);
-  const time = body.time || new Date().toTimeString().slice(0,5);
-  await env.DB.prepare("INSERT INTO checkins (user_id, checkin_date, checkin_time) VALUES (1, ?, ?)").bind(date, time).run();
-  return { success:true };
+  const date = body.date || new Date().toISOString().slice(0, 10);
+  const time = body.time || new Date().toTimeString().slice(0, 5);
+
+  await env.DB.prepare("INSERT INTO checkins (user_id, checkin_date, checkin_time) VALUES (1, ?, ?)")
+    .bind(date, time)
+    .run();
+
+  return { success: true };
 }
 
 async function listWorkouts(env) {
@@ -114,11 +153,15 @@ async function listWorkouts(env) {
     FROM workouts w
     ORDER BY w.id DESC
   `).all();
+
   const workouts = results || [];
   for (const w of workouts) {
-    const setRes = await env.DB.prepare("SELECT * FROM workout_sets WHERE workout_id = ? ORDER BY set_order ASC, id ASC").bind(w.id).all();
+    const setRes = await env.DB.prepare("SELECT * FROM workout_sets WHERE workout_id = ? ORDER BY set_order ASC, id ASC")
+      .bind(w.id)
+      .all();
     w.sets = setRes.results || [];
   }
+
   return workouts;
 }
 
@@ -126,20 +169,29 @@ async function createWorkout(request, env) {
   const body = await safeJson(request);
   const title = (body.title || "").trim() || "Untitled workout";
   const notes = (body.notes || "").trim() || null;
-  await env.DB.prepare("INSERT INTO workouts (user_id, title, notes) VALUES (1, ?, ?)").bind(title, notes).run();
-  return { success:true };
+
+  await env.DB.prepare("INSERT INTO workouts (user_id, title, notes) VALUES (1, ?, ?)")
+    .bind(title, notes)
+    .run();
+
+  return { success: true };
 }
 
 async function createWorkoutSet(request, env) {
   const body = await safeJson(request);
   const workoutId = Number(body.workout_id);
   const exercise = (body.exercise || "").trim();
+
   if (!workoutId) throw new Error("Missing workout_id");
   if (!exercise) throw new Error("Exercise is required");
+
   const next = await scalar(env, "SELECT COALESCE(MAX(set_order),0)+1 AS c FROM workout_sets WHERE workout_id = ?", [workoutId]);
+
   await env.DB.prepare("INSERT INTO workout_sets (workout_id, exercise, weight, reps, set_order) VALUES (?, ?, ?, ?, ?)")
-    .bind(workoutId, exercise, nullable(body.weight), nullable(body.reps), next).run();
-  return { success:true };
+    .bind(workoutId, exercise, nullable(body.weight), nullable(body.reps), next)
+    .run();
+
+  return { success: true };
 }
 
 async function listFoods(env) {
@@ -151,6 +203,7 @@ async function createFood(request, env) {
   const body = await safeJson(request);
   const name = (body.name || "").trim();
   if (!name) throw new Error("Food name is required");
+
   await env.DB.prepare(`
     INSERT INTO foods (user_id, name, brand, serving_size, calories, protein, carbs, fat)
     VALUES (1, ?, ?, ?, ?, ?, ?, ?)
@@ -163,12 +216,14 @@ async function createFood(request, env) {
     num0(body.carbs),
     num0(body.fat)
   ).run();
-  return { success:true };
+
+  return { success: true };
 }
 
 async function listNutrition(env) {
   const { results } = await env.DB.prepare("SELECT * FROM nutrition_logs ORDER BY log_date DESC, id DESC").all();
   const rows = results || [];
+
   for (const row of rows) {
     const totals = await env.DB.prepare(`
       SELECT COALESCE(SUM(calories),0) AS calories,
@@ -177,18 +232,21 @@ async function listNutrition(env) {
              COALESCE(SUM(fat),0) AS fat
       FROM nutrition_logs WHERE log_date = ?
     `).bind(row.log_date).first();
-    row.day_totals = totals || { calories:0, protein:0, carbs:0, fat:0 };
+
+    row.day_totals = totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
   }
+
   return rows;
 }
 
 async function createNutrition(request, env) {
   const body = await safeJson(request);
+
   await env.DB.prepare(`
     INSERT INTO nutrition_logs (user_id, log_date, meal_name, calories, protein, carbs, fat, water, notes)
     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    body.log_date || new Date().toISOString().slice(0,10),
+    body.log_date || new Date().toISOString().slice(0, 10),
     (body.meal_name || "Meal").trim(),
     num0(body.calories),
     num0(body.protein),
@@ -197,7 +255,8 @@ async function createNutrition(request, env) {
     num0(body.water),
     (body.notes || "").trim() || null
   ).run();
-  return { success:true };
+
+  return { success: true };
 }
 
 async function listMeasurements(env) {
@@ -207,11 +266,12 @@ async function listMeasurements(env) {
 
 async function createMeasurement(request, env) {
   const body = await safeJson(request);
+
   await env.DB.prepare(`
     INSERT INTO measurements (user_id, log_date, weight, waist, chest, arms, thighs, body_fat, notes)
     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
-    body.log_date || new Date().toISOString().slice(0,10),
+    body.log_date || new Date().toISOString().slice(0, 10),
     nullable(body.weight),
     nullable(body.waist),
     nullable(body.chest),
@@ -220,7 +280,8 @@ async function createMeasurement(request, env) {
     nullable(body.body_fat),
     (body.notes || "").trim() || null
   ).run();
-  return { success:true };
+
+  return { success: true };
 }
 
 async function listMedia(env) {
@@ -233,14 +294,21 @@ async function uploadMedia(request, env) {
   const file = form.get("file");
   const mediaType = String(form.get("media_type") || "selfie").trim();
   const notes = String(form.get("notes") || "").trim() || null;
+
   if (!(file instanceof File)) throw new Error("No file uploaded");
+
   const safeName = String(file.name || "upload").replace(/[^\w.\-]+/g, "_");
   const key = `users/1/${mediaType}/${Date.now()}-${safeName}`;
+
   await env.MEDIA.put(key, file.stream(), {
     httpMetadata: { contentType: file.type || "application/octet-stream" }
   });
-  await env.DB.prepare("INSERT INTO media (user_id, media_type, file_key, notes) VALUES (1, ?, ?, ?)").bind(mediaType, key, notes).run();
-  return { success:true, key };
+
+  await env.DB.prepare("INSERT INTO media (user_id, media_type, file_key, notes) VALUES (1, ?, ?, ?)")
+    .bind(mediaType, key, notes)
+    .run();
+
+  return { success: true, key };
 }
 
 async function listSavedWorkouts(env) {
@@ -252,9 +320,12 @@ async function createSavedWorkout(request, env) {
   const body = await safeJson(request);
   const title = (body.title || "").trim();
   if (!title) throw new Error("Title is required");
+
   await env.DB.prepare("INSERT INTO saved_workouts (user_id, title, category, notes) VALUES (1, ?, ?, ?)")
-    .bind(title, (body.category || "").trim() || null, (body.notes || "").trim() || null).run();
-  return { success:true };
+    .bind(title, (body.category || "").trim() || null, (body.notes || "").trim() || null)
+    .run();
+
+  return { success: true };
 }
 
 async function listCycles(env) {
@@ -264,30 +335,237 @@ async function listCycles(env) {
 
 async function createCycle(request, env) {
   const body = await safeJson(request);
-  const start = body.start_date || new Date().toISOString().slice(0,10);
-  await env.DB.prepare("INSERT INTO cycles (user_id, start_date, end_date, symptoms, notes) VALUES (1, ?, ?, ?, ?)")
-    .bind(start, body.end_date || null, (body.symptoms || "").trim() || null, (body.notes || "").trim() || null).run();
-  return { success:true };
+  const start = (body.start_date || "").trim() || new Date().toISOString().slice(0, 10);
+  const end = (body.end_date || "").trim() || null;
+  const symptoms = (body.symptoms || "").trim() || null;
+  const notes = (body.notes || "").trim() || null;
+
+  await env.DB.prepare(`
+    INSERT INTO cycles (user_id, start_date, end_date, symptoms, notes)
+    VALUES (1, ?, ?, ?, ?)
+  `).bind(start, end, symptoms, notes).run();
+
+  return { success: true };
 }
 
 async function getSettings(env) {
   await env.DB.prepare("INSERT OR IGNORE INTO users (id, email, theme, cycle_tracking_enabled) VALUES (1, 'local@fitvault.app', 'neutral', 0)").run();
   const row = await env.DB.prepare("SELECT theme, cycle_tracking_enabled FROM users WHERE id = 1").first();
-  return row || { theme:"neutral", cycle_tracking_enabled:0 };
+  return row || { theme: "neutral", cycle_tracking_enabled: 0 };
 }
 
 async function saveTheme(request, env) {
   const body = await safeJson(request);
   const theme = String(body.theme || "neutral").trim() || "neutral";
-  await env.DB.prepare("INSERT OR IGNORE INTO users (id, email, theme, cycle_tracking_enabled) VALUES (1, 'local@fitvault.app', ?, 0)").bind(theme).run();
-  await env.DB.prepare("UPDATE users SET theme = ? WHERE id = 1").bind(theme).run();
-  return { success:true };
+
+  await env.DB.prepare("INSERT OR IGNORE INTO users (id, email, theme, cycle_tracking_enabled) VALUES (1, 'local@fitvault.app', ?, 0)")
+    .bind(theme)
+    .run();
+
+  await env.DB.prepare("UPDATE users SET theme = ? WHERE id = 1")
+    .bind(theme)
+    .run();
+
+  return { success: true };
 }
 
 async function saveCycleTracking(request, env) {
   const body = await safeJson(request);
   const enabled = Number(body.enabled || 0) ? 1 : 0;
-  await env.DB.prepare("INSERT OR IGNORE INTO users (id, email, theme, cycle_tracking_enabled) VALUES (1, 'local@fitvault.app', 'neutral', ?)").bind(enabled).run();
-  await env.DB.prepare("UPDATE users SET cycle_tracking_enabled = ? WHERE id = 1").bind(enabled).run();
-  return { success:true };
+
+  await env.DB.prepare("INSERT OR IGNORE INTO users (id, email, theme, cycle_tracking_enabled) VALUES (1, 'local@fitvault.app', 'neutral', ?)")
+    .bind(enabled)
+    .run();
+
+  await env.DB.prepare("UPDATE users SET cycle_tracking_enabled = ? WHERE id = 1")
+    .bind(enabled)
+    .run();
+
+  return { success: true };
+}
+
+// ---------- AI helpers ----------
+
+async function fileToBase64(file) {
+  const ab = await file.arrayBuffer();
+  const bytes = new Uint8Array(ab);
+  let binary = "";
+  const chunk = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+
+  return btoa(binary);
+}
+
+async function callOpenAIWithImage(env, prompt, file) {
+  if (!env.OPENAI_API_KEY) {
+    return { fallback: true, message: "OPENAI_API_KEY secret is not configured." };
+  }
+
+  if (!(file instanceof File)) {
+    throw new Error("No file uploaded");
+  }
+
+  const imageBase64 = await fileToBase64(file);
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4.1-mini",
+      input: [
+        {
+          role: "user",
+          content: [
+            { type: "input_text", text: prompt },
+            {
+              type: "input_image",
+              image_url: `data:${file.type || "image/jpeg"};base64,${imageBase64}`
+            }
+          ]
+        }
+      ]
+    })
+  });
+
+  const data = await response.json();
+  const text = data?.output?.[0]?.content?.find?.(c => c.type === "output_text")?.text
+    || data?.output_text
+    || "";
+
+  if (!text) {
+    return { error: true, raw: data };
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: true, raw: data, text };
+  }
+}
+
+async function aiMeal(request, env) {
+  const form = await request.formData();
+  const file = form.get("file");
+
+  const parsed = await callOpenAIWithImage(
+    env,
+    `Analyze this meal photo. Return only valid JSON with keys:
+{
+  "meal_name": "string",
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fat": number,
+  "notes": "short string"
+}`,
+    file
+  );
+
+  if (parsed.error || parsed.fallback) return parsed;
+
+  await env.DB.prepare(`
+    INSERT INTO nutrition_logs (user_id, log_date, meal_name, calories, protein, carbs, fat, water, notes)
+    VALUES (1, ?, ?, ?, ?, ?, ?, 0, ?)
+  `).bind(
+    new Date().toISOString().slice(0, 10),
+    String(parsed.meal_name || "Scanned meal"),
+    num0(parsed.calories),
+    num0(parsed.protein),
+    num0(parsed.carbs),
+    num0(parsed.fat),
+    String(parsed.notes || "Meal scanned from image")
+  ).run();
+
+  return { success: true, data: parsed };
+}
+
+async function aiLabel(request, env) {
+  const form = await request.formData();
+  const file = form.get("file");
+
+  const parsed = await callOpenAIWithImage(
+    env,
+    `Read this nutrition label and return only valid JSON with keys:
+{
+  "name": "string",
+  "brand": "string",
+  "serving_size": "string",
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fat": number
+}`,
+    file
+  );
+
+  if (parsed.error || parsed.fallback) return parsed;
+
+  await env.DB.prepare(`
+    INSERT INTO foods (user_id, name, brand, serving_size, calories, protein, carbs, fat)
+    VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    String(parsed.name || "Scanned food"),
+    String(parsed.brand || ""),
+    String(parsed.serving_size || ""),
+    num0(parsed.calories),
+    num0(parsed.protein),
+    num0(parsed.carbs),
+    num0(parsed.fat)
+  ).run();
+
+  return { success: true, data: parsed };
+}
+
+async function aiWorkout(request, env) {
+  const form = await request.formData();
+  const file = form.get("file");
+
+  const parsed = await callOpenAIWithImage(
+    env,
+    `Analyze this workout image or screenshot. Return only valid JSON:
+{
+  "title": "string",
+  "notes": "string",
+  "exercises": [
+    { "name": "string", "weight": number, "reps": number }
+  ]
+}`,
+    file
+  );
+
+  if (parsed.error || parsed.fallback) return parsed;
+
+  const title = String(parsed.title || "Scanned workout");
+  const notes = String(parsed.notes || "Workout imported from image");
+
+  const result = await env.DB.prepare(`
+    INSERT INTO workouts (user_id, title, notes)
+    VALUES (1, ?, ?)
+  `).bind(title, notes).run();
+
+  const workoutId = result.meta?.last_row_id;
+
+  if (workoutId && Array.isArray(parsed.exercises)) {
+    let order = 1;
+    for (const ex of parsed.exercises) {
+      await env.DB.prepare(`
+        INSERT INTO workout_sets (workout_id, exercise, weight, reps, set_order)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        workoutId,
+        String(ex.name || "Exercise"),
+        nullable(ex.weight),
+        nullable(ex.reps),
+        order++
+      ).run();
+    }
+  }
+
+  return { success: true, data: parsed };
 }
