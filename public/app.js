@@ -251,7 +251,23 @@ async function renderNutrition() {
         <div class="stat"><div class="label">Fat</div><div class="value">${latest.day_totals ? latest.day_totals.fat : 0}g</div></div>
       </div>
     </section>
-
+<div class="card">
+  <h3>AI meal scan</h3>
+  <div class="form-grid">
+    <div class="field full">
+      <label>Meal photo</label>
+      <input id="mealScanFile" type="file" accept="image/*" />
+    </div>
+    <div class="field full">
+      <label>Nutrition label photo</label>
+      <input id="labelScanFile" type="file" accept="image/*" />
+    </div>
+  </div>
+  <div class="row">
+    <button class="primary" onclick="scanMealAI()">Scan Meal</button>
+    <button class="secondary" onclick="scanLabelAI()">Scan Label</button>
+  </div>
+</div>
     <section class="surface">
       <div class="split">
         <div class="card">
